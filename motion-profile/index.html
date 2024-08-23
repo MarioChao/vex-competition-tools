@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <link rel="stylesheet" href="../style.css">
+        <script src="https://www.gstatic.com/charts/loader.js"></script>
+        <script src="./motionProfile.js"></script>
+    </head>
+    <body>
+        <div>
+            <div class="flex-container">
+                <div>
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Start Acceleration: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="0.1" max="100" step="0.1" value="30" id="startAcceleration">
+                                <span id="startAccelerationLabel"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Max Velocity: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="0" max="100" step="1" value="100" id="maxVelocity">
+                                <span id="maxVelocityLabel"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>End Deceleration: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="0.1" max="100" step="0.1" value="30" id="endDeceleration">
+                                <span id="endDecelerationLabel"></span>
+                            </td>
+                        </tr>
+                    </table>
+                    <button id="movementDetailsCreateProfile">Create Profile</button>
+                </div>
+                <div>
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Acceleration Time: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="0" max="10" step="0.05" value="2" id="accelerationTime">
+                                <span id="accelerationTimeLabel"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Middle Time: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="0" max="10" step="0.05" value="2" id="middleTime">
+                                <span id="middleTimeLabel"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Deceleration Time: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="0" max="10" step="0.05" value="2" id="decelerationTime">
+                                <span id="decelerationTimeLabel"></span>
+                            </td>
+                        </tr>
+                    </table>
+                    <button id="elapsedTimeCreateProfile">Create Profile</button>
+                </div>
+                <div>
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Distance: </span>
+                            </td>
+                            <td>
+                                <input type="number" min="-1000" max="1000" step="5" value="30" id="travelDistance">
+                                <span id="travelDistanceLabel"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="flex-container">
+                <div id="motionProfileVelocityTimeChart" style="width:700px; height:400px"></div>
+            </div>
+        </div>
+    </body>
+</html>
