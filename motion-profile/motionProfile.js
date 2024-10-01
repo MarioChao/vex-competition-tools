@@ -16,11 +16,11 @@ function MotionProfile() {
 
     const precision = 5;
 
-    var signum = function(number) {
+    function signum(number) {
         return (number > 0) - (number < 0);
     }
     
-    var getElements = function() {
+    function getElements() {
         startAccelerationElement = document.getElementById("startAcceleration");
         endDecelerationElement = document.getElementById("endDeceleration");
         maxVelocityElement = document.getElementById("maxVelocity");
@@ -32,14 +32,14 @@ function MotionProfile() {
         distanceElement = document.getElementById("travelDistance");
     };
 
-    var updateDistanceValue = function() {
+    function updateDistanceValue() {
         distanceElement = document.getElementById("travelDistance");
         distance = distanceElement.value;
     }
     
     // From movement details
 
-    var updateValuesFromMovementDetails = function() {
+    function updateValuesFromMovementDetails() {
         getElements();
         startAcceleration = Math.max(0.05, Math.abs(startAccelerationElement.value));
         endDeceleration = -Math.max(0.05, Math.abs(endDecelerationElement.value));
@@ -50,7 +50,7 @@ function MotionProfile() {
         updateDistanceValue();
     };
 
-    var createMotionProfileFromMovementDetails = function(distance) {
+    function createMotionProfileFromMovementDetails(distance) {
         /* Kinematics:
         vf^2 = vi^2 + 2a * Δx
         Δx = (vf^2 - vi^2) / (2a)
@@ -88,7 +88,7 @@ function MotionProfile() {
 
     // From elapsed time
 
-    var updateValuesFromElapsedTime = function() {
+    function updateValuesFromElapsedTime() {
         getElements();
         accelerationTime = accelerationTimeElement.value;
         middleTime = middleTimeElement.value;
@@ -110,7 +110,7 @@ function MotionProfile() {
         updateDistanceValue();
     };
 
-    var createMotionProfileFromElapsedTime = function(distance) {
+    function createMotionProfileFromElapsedTime(distance) {
         // Velocity:
         // v_max = x_total / (t_1 / 2 + t_2 + t_3 / 2)
         velocityCap = Math.abs(distance) / (accelerationTime / 2.0 + middleTime + decelerationTime / 2.0);
