@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Image Array</title>
+		<script type="module" src="./main.js"></script>
+		<link rel="stylesheet" href="https://mariochao.github.io/src/style-no-hover.css">
+		<link rel="stylesheet" href="https://mariochao.github.io/dream-game/src/assets/styles/navigation-bar.css">
+	</head>
+	<body class="navbar-body" style="background-color: lightgoldenrodyellow;">
+		<!-- Navigation bar -->
+		<div class="navbar" style="text-align: center; background-color: #FEEAAA;">
+			<h1>Image Array</h1>
+		</div>
+		<div>
+			<h2 style="text-align: center;">Image Converter</h2>
+			<div class="flex-container">
+				<div>
+					<!-- Image reading -->
+					<input id="image-input" type="file" accept="image/*">
+					<br><br>
+					<input id="image-read-button" type="button" value="Update image">
+					<!-- Image info -->
+					<p>
+						Size:
+						<span id="image-size-label"></span>
+					</p>
+					<!-- Resolution config -->
+					<p style="text-align: center;">Resize resolution config</p>
+					<label for="image-resolution-width">Width:</label>
+					<br>
+					<input id="image-resolution-width" type="number" value="480">
+					<br>
+					<label for="image-resolution-height">Height:</label>
+					<br>
+					<input id="image-resolution-height" type="number" value="240">
+					<!-- Color config -->
+					<p style="text-align: center;">Color config</p>
+					<label for="image-color-round">Round to nearest:</label>
+					<br>
+					<input id="image-color-round" type="number" value="1">
+				</div>
+				<div>
+					<!-- Image output -->
+					<p>
+						Output resolution:
+						<span id="image-output-size"></span>
+					</p>
+					<p>
+						Output character count:
+						<span id="image-output-char-count"></span>
+					</p>
+					<!-- Result output array -->
+					<label for="image-output-array">Output array</label>
+					<br>
+					<textarea id="image-output-array" rows="4" cols="40" readonly placeholder="Image array will be shown here (if small enough)." style="resize: none;"></textarea>
+					<br>
+					<input id="download-image-array" type="button" value="Download Array">
+					<!-- Result output vector -->
+					<br><br>
+					<label for="image-output-vector">Output vector</label>
+					<br>
+					<textarea id="image-output-vector" rows="4" cols="40" readonly placeholder="Image vector will be shown here (if small enough)." style="resize: none;"></textarea>
+					<br>
+					<input id="download-image-vector" type="button" value="Download Vector">
+				</div>
+				<div>
+					<canvas id="image-output-canvas" width="300" height="300"></canvas>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
