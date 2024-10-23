@@ -8,6 +8,9 @@ import { ImageReader } from "./image-reader.js";
 
 const imageReader = new ImageReader();
 
+const storedImageOutputCanvas = document.createElement("canvas");
+const storedImageOutputContext = storedImageOutputCanvas.getContext("2d");
+
 const storedImageOutput = {
 	outputArray: "",
 	outputVector: "",
@@ -16,6 +19,13 @@ const storedImageOutput = {
 const maximumDisplayCharCount = (1 << 22);
 
 // Helper functions
+
+function downloadCanvasImage(canvas, fileName) {
+	const a = document.createElement('a');
+	a.href = canvas.toDataURL();
+	a.download = fileName;
+	a.click();
+}
 
 function downloadTextFile(contentString, fileName) {
 	// Create a Blob object with the content
@@ -30,14 +40,10 @@ function downloadTextFile(contentString, fileName) {
 	a.download = fileName;
 
 	// Simulate a click
-	document.body.appendChild(a);
 	a.click();
 
 	// Clean up the object URL
 	URL.revokeObjectURL(url);
-
-	// Clean up anchor
-	document.body.removeChild(a);
 }
 
 // Local functions
@@ -101,6 +107,12 @@ function initializeImageReader() {
 			imageOutputVector.value = "";
 		}
 
+		// Store output image
+		storedImageOutputCanvas.width = img.width;
+		storedImageOutputCanvas.height = img.height;
+		storedImageOutputContext.clearRect(0, 0, storedImageOutputCanvas.width, storedImageOutputCanvas.height);
+		storedImageOutputContext.drawImage(img, 0, 0, frameWidth, frameHeight);
+
 		// Draw output (scaled) image
 		const canvasWidth = imageOutputCanvas.width;
 		const canvasHeight = imageOutputCanvas.height;
@@ -108,8 +120,8 @@ function initializeImageReader() {
 			canvasWidth / Math.max(canvasWidth, frameWidth),
 			canvasHeight / Math.max(canvasHeight, frameHeight),
 		);
-		const scaledFrameWidth = frameWidth * scaleFactor;
-		const scaledFrameHeight = frameHeight * scaleFactor;
+		const scaledFrameWidth = Math.floor(frameWidth * scaleFactor);
+		const scaledFrameHeight = Math.floor(frameHeight * scaleFactor);
 		imageOutputContext.clearRect(0, 0, canvasWidth, canvasHeight);
 		if (config.rgbRound == 1) {
 			imageOutputContext.drawImage(img, 0, 0, frameWidth * scaleFactor, frameHeight * scaleFactor);
@@ -165,9 +177,15 @@ function initializeImageReader() {
 }
 
 function initializeImageArrayDownload() {
+	const downloadScaledImage = document.getElementById('download-scaled-image');
 	const downloadImageArray = document.getElementById('download-image-array');
 	const downloadImageVector = document.getElementById('download-image-vector');
 
+	downloadScaledImage.addEventListener("click", (ev) => {
+		if (storedImageOutput.outputArray !== "") { // If stored array is empty, then image is empty
+			downloadCanvasImage(storedImageOutputCanvas, "scaled-image");
+		}
+	});
 	downloadImageArray.addEventListener("click", (ev) => {
 		if (storedImageOutput.outputArray !== "") {
 			downloadTextFile(storedImageOutput.outputArray, "image-array");
