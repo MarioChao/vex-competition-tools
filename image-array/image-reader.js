@@ -11,6 +11,8 @@ const defaultConfiguration = {
 	rgbRound: 1,
 };
 
+const maxLineLength = 100;
+
 // Helper functions
 
 function roundToNearestIntMultiple(x, multiple) {
@@ -133,7 +135,7 @@ function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previou
 			rowResult += ",";
 
 			// New line if row is too long
-			if (rowResult.length > 100) {
+			if (rowResult.length > maxLineLength) {
 				resultString += rowResult;
 				resultString += "\n";
 				rowResult = "";
@@ -206,7 +208,21 @@ export async function getBlobBufferString(blob) {
 
 	// Turn array buffer into array string
 	const uint8Array = new Uint8Array(arrayBuffer);
-	const resultString = `{${uint8Array.join(",")}}`;
+	let resultString = "";
+	resultString += "{";
+	let rowString = "";
+	for (const value of uint8Array) {
+		rowString += value.toString();
+		rowString += ",";
+		if (rowString.length > maxLineLength) {
+			resultString += rowString;
+			resultString += "\n";
+			rowString = "";
+		}
+	}
+	rowString += "\n";
+	resultString += rowString;
+	resultString += "}";
 
 	// Return
 	return resultString;

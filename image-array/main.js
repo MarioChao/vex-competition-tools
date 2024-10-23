@@ -103,6 +103,7 @@ function initializeImageReader() {
 		} else {
 			originalImageOutputPNGVector.value = "";
 		}
+		storedImageOutput.originalPNGVector = resultPNGString;
 	}
 
 	async function readImage(file) {
