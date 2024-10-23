@@ -21,7 +21,52 @@ function clamp(x, minNum, maxNum) {
 	return Math.min(Math.max(x, minNum), maxNum);
 }
 
-// Get detailed RGB info from a flat array pixel
+function readAsArrayBuffer(imageFile) {
+	return new Promise((resolve, reject) => {
+		// Process image
+		const reader = new FileReader();
+
+		reader.onload = async (event) => {
+			resolve(reader.result);
+		};
+		reader.onerror = reject;
+
+		reader.readAsArrayBuffer(imageFile);
+	});
+}
+
+/**
+ * Resize image and return the image data
+ * @param {HTMLImageElement} img 
+ * @param {HTMLCanvasElement} canvas 
+ * @param {number} targetWidth 
+ * @param {number} targetHeight 
+ * @returns {ImageData} Image data
+ */
+function getResizedImageData(img, canvas, targetWidth, targetHeight) {
+	const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+	// Resize canvas to target resolution
+	canvas.width = targetWidth;
+	canvas.height = targetHeight;
+
+	// Draw resized image
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+	// Return image data
+	return ctx.getImageData(0, 0, targetWidth, targetHeight);
+}
+
+/**
+ * Get detailed RGB info from a flat array pixel.
+ * @param {Uint8ClampedArray} dataArray 
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} width 
+ * @param {number} rgbRound 
+ * @returns RGB values
+ */
 function getPixelRGBValues(dataArray, x, y, width, rgbRound) {
 	// Get RGB values
 	const pixelBaseIndex = (x + y * width) * 4;
@@ -40,13 +85,164 @@ function getPixelRGBValues(dataArray, x, y, width, rgbRound) {
 	return { R, G, B, rgbNumber };
 }
 
+/**
+ * 
+ * @param {ImageData} imageData 
+ * @param {number} rgbRound 
+ * @param {boolean} temporalEncode 
+ * @param {[[[number]]]} previousFrame 
+ * @returns 
+ */
+function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previousFrame = null) {
+	// Get pixels
+	const pixels = imageData.data;
+	const width = imageData.width;
+	const height = imageData.height;
+	// console.log(imageData.data);
+
+	// Initialize result
+	let resultString = "";
+	const frameRGB = [];
+
+	// Loop through every pixel
+	resultString += "{";
+	resultString += "\n";
+	for (let resoI = 0; resoI < height; resoI++) {
+		// Row RGBs
+		let rowResult = "";
+		const rowRGB = [];
+		// rowResult += "{";
+		for (let resoJ = 0; resoJ < width; resoJ++) {
+			// Get pixel's RGB info
+			let { R, G, B, rgbNumber } = getPixelRGBValues(pixels, resoJ, resoI, width, rgbRound);
+			rowRGB.push([R, G, B, 255]);
+
+			// Add RBG to result string
+			if (temporalEncode) {
+				const prevRGB = previousFrame[resoI][resoJ];
+				if (prevRGB[0] === R && prevRGB[1] === G && prevRGB[2] === B) {
+					rowResult += "-1";
+				} else {
+					rowResult += rgbNumber;
+				}
+			} else {
+				rowResult += rgbNumber;
+			}
+
+			// Trailing comma for each pixel
+			rowResult += ",";
+
+			// New line if row is too long
+			if (rowResult.length > 100) {
+				resultString += rowResult;
+				resultString += "\n";
+				rowResult = "";
+			}
+		}
+
+		// New line for each row
+		rowResult += "\n";
+
+		// Update frame
+		resultString += rowResult;
+		frameRGB.push(rowRGB);
+	}
+
+	// Trailing character for each frame
+	resultString += "}";
+
+	// Return
+	return { resultString, frameRGB };
+}
+
+/**
+ * 
+ * @param {[[[number]]]} frameRGB 
+ * @param {HTMLCanvasElement} canvas 
+ * @param {number} width 
+ * @param {number} height 
+ */
+function drawFrameRGBOnCanvas(frameRGB, canvas, width, height) {
+	const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+	// Create new image data
+	const dataArray = new Uint8ClampedArray(frameRGB.flat(2));
+	const imageData = new ImageData(dataArray, width, height);
+
+	// Resize canvas
+	canvas.width = width;
+	canvas.height = height;
+
+	// Draw on canvas
+	ctx.clearRect(0, 0, width, height);
+	ctx.putImageData(imageData, 0, 0);
+
+	// Return info
+	return { imageData };
+}
+
+/**
+ * 
+ * @param {HTMLCanvasElement} canvas 
+ * @return {Promise<Blob>}
+ */
+function encodeCanvasToPNG(canvas) {
+	return new Promise((resolve) => {
+		// Convert canvas to a Blob
+		canvas.toBlob((blob) => {
+			resolve(blob);
+		}, "image/png");
+	});
+}
+
+/**
+ * 
+ * @param {Blob} blob 
+ * @returns 
+ */
+export async function getBlobBufferString(blob) {
+	// Convert blob to array buffer
+	const arrayBuffer = await blob.arrayBuffer();
+
+	// Turn array buffer into array string
+	const uint8Array = new Uint8Array(arrayBuffer);
+	const resultString = `{${uint8Array.join(",")}}`;
+
+	// Return
+	return resultString;
+}
+
+/**
+ * 
+ * @param {[[[number]]]} frameRGB 
+ * @param {HTMLCanvasElement} canvas 
+ * @param {number} width 
+ * @param {number} height 
+ */
+async function getFrameRGBBuffer(frameRGB, canvas, width, height) {
+	// Draw frame on canvas
+	const { imageData: newImageData } = drawFrameRGBOnCanvas(frameRGB, canvas, width, height);
+
+	// Encode canvas as png
+	const newBlob = await encodeCanvasToPNG(canvas);
+
+	// Convert blob to array buffer
+	const resultString = await getBlobBufferString(newBlob);
+
+	// Return
+	return { resultString, newImageData, newBlob };
+}
+
 // ImageReader Class
 export class ImageReader {
 	constructor() {
 		this.canvas = document.createElement('canvas');
 		this.canvas_ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
-		this.showSameColor = false;
+		this.canvas2 = document.createElement('canvas');
+		this.canvas2_ctx = this.canvas2.getContext('2d', { willReadFrequently: true });
+
+		this.temporalEncode = true;
 		this.setConfiguration(defaultConfiguration);
 	}
 
@@ -60,8 +256,8 @@ export class ImageReader {
 		this.rgbRound = config.rgbRound;
 	}
 
-	// Retrieve the image pixels converted into an array/vector
-	async getImageArray(readerResult, useImage) {
+	// Retrieve the resized image converted into vector and memory buffer
+	async getResizedImageArray(readerResult, useImage) {
 		const img = useImage || new Image();
 
 		// Load image
@@ -70,81 +266,36 @@ export class ImageReader {
 			await img.decode();
 		}
 
-		// Resize canvas & draw resized image on canvas
-		const canvas = this.canvas;
-		const ctx = this.canvas_ctx;
-		canvas.width = this.resolutionWidth;
-		canvas.height = this.resolutionHeight;
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+		// Initialize result strings
+		let resultRGBString = "{";
+		let resultPNGString = "{";
 
-		// Initialize result
-		let result = "{";
-		let frameId = 0;
+		// Get frame's image data
+		const resizedImageData = getResizedImageData(img, this.canvas, this.resolutionWidth, this.resolutionHeight);
 
-		// Image frame info
-		const width = canvas.width;
-		const height = canvas.height;
-		const frameRGB = [];
+		// Add frame result for RGB pixels
+		const { resultString: frameResultRGBString, frameRGB } = getContextFrameRGB(resizedImageData, this.rgbRound);
+		resultRGBString += frameResultRGBString;
 
-		// Get pixels
-		const imageData = ctx.getImageData(0, 0, width, height);
-		const pixels = imageData.data;
-		// console.log(imageData.data);
+		// Add frame result for png format
+		const { resultString: frameResultPNGString, newImageData, newBlob } = await getFrameRGBBuffer(frameRGB, this.canvas2, resizedImageData.width, resizedImageData.height);
+		resultPNGString += frameResultPNGString;
 
-		// Loop through every pixel
-		const willTemporalEncode = (frameId > 0 && !this.showSameColor);
-		result += "{";
-		for (let resoI = 0; resoI < this.resolutionHeight; resoI++) {
-			// Row RGBs
-			const rowRGB = [];
-			result += "{";
-			for (let resoJ = 0; resoJ < this.resolutionWidth; resoJ++) {
-				// Get block's RGB info
-				let { R, G, B, rgbNumber } = getPixelRGBValues(pixels, resoJ, resoI, width, this.rgbRound);
-				rowRGB.push([R, G, B, 255]);
+		// Enclosing bracket
+		resultRGBString += "}";
+		resultPNGString += "}";
 
-				// Add RBG to result string
-				if (willTemporalEncode) {
-					const prevRGB = frameRGB[frameId - 1][resoI][resoJ];
-					if (prevRGB[0] === R && prevRGB[1] === G && prevRGB[2] === B) {
-						result += "-1";
-					} else {
-						result += rgbNumber;
-					}
-				} else {
-					result += rgbNumber;
-				}
-
-				// Trailing comma for each block
-				if (resoJ + 1 < this.resolutionWidth) {
-					result += ",";
-				}
-			}
-			result += "}";
-
-			// Trailing comma for each row
-			if (resoI + 1 < this.resolutionHeight) {
-				result += ",";
-			}
-
-			// Update frame
-			frameRGB.push(rowRGB);
-		}
-		result += "}";
-		result += "}";
-
-		// Return result string and the RGB frame data
-		return { img, result, frameRGB };
+		// Return result strings and the RGB frame data
+		return { img, resultRGBString, resultPNGString, frameRGB, newImageData, newBlob };
 	}
 
 	/**
-	 * Main function to process the image
+	 * Main function to resize & process the image
 	 * @param {File} imageFile
 	 * @param {{resolutionWidth, resolutionHeight, rgbRound}} config
-	 * @returns {Promise<{img: HTMLImageElement, result: string, frameRGB: [[[number]]]}>}
+	 * @returns {Promise<{img: HTMLImageElement, resultRGBString: string, resultPNGString: string, frameRGB: [[[number]]], newImageData: ImageData, newBlob: Blob}>}
 	 */
-	async processImageFile(imageFile, config) {
+	async processResizeImageFile(imageFile, config) {
 		// Set config
 		this.setConfiguration(config);
 
@@ -154,12 +305,24 @@ export class ImageReader {
 			const reader = new FileReader();
 
 			reader.onload = async (event) => {
-				resolve(await this.getImageArray(reader.result));
+				resolve(await this.getResizedImageArray(reader.result));
 			};
 			reader.onerror = reject;
 
 			reader.readAsDataURL(imageFile);
 		});
+	}
 
+	/**
+	 * Main function to process the original image file
+	 * @param {File} imageFile 
+	 */
+	async processOriginalImageFile(imageFile) {
+		let resultPNGString = "";
+		resultPNGString += "{";
+		const frameResultPNGString = await getBlobBufferString(imageFile);
+		resultPNGString += frameResultPNGString;
+		resultPNGString += "}";
+		return { resultPNGString };
 	}
 };

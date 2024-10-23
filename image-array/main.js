@@ -2,7 +2,7 @@
 
 // Import
 
-import { ImageReader } from "./image-reader.js";
+import { getBlobBufferString, ImageReader } from "./image-reader.js";
 
 // Variables
 
@@ -12,14 +12,20 @@ const storedImageOutputCanvas = document.createElement("canvas");
 const storedImageOutputContext = storedImageOutputCanvas.getContext("2d");
 
 const storedImageOutput = {
-	outputArray: "",
-	outputVector: "",
+	originalPNGVector: "",
+	outputRGBVector: "",
+	outputPNGVector: "",
 }
 
-const maximumDisplayCharCount = (1 << 22);
+const maximumDisplayCharCount = (1 << 20);
 
 // Helper functions
 
+/**
+ * 
+ * @param {HTMLCanvasElement} canvas 
+ * @param {string} fileName 
+ */
 function downloadCanvasImage(canvas, fileName) {
 	const a = document.createElement('a');
 	a.href = canvas.toDataURL();
@@ -27,6 +33,11 @@ function downloadCanvasImage(canvas, fileName) {
 	a.click();
 }
 
+/**
+ * 
+ * @param {string} contentString 
+ * @param {string} fileName 
+ */
 function downloadTextFile(contentString, fileName) {
 	// Create a Blob object with the content
 	const blob = new Blob([contentString], { type: 'text/plain' });
@@ -57,10 +68,14 @@ function initializeImageReader() {
 	const resolutionHeight = document.getElementById('image-resolution-height');
 	const roundColor = document.getElementById('image-color-round');
 
+	const originalImageOutputPNGCharCountLabel = document.getElementById('original-image-output-png-char-count');
+	const originalImageOutputPNGVector = document.getElementById('original-image-output-png-vector');
+
 	const imageOutputSizeLabel = document.getElementById('image-output-size');
-	const imageOutputCharCountLabel = document.getElementById('image-output-char-count');
-	const imageOutputArray = document.getElementById('image-output-array');
-	const imageOutputVector = document.getElementById('image-output-vector');
+	const imageOutputRGBCharCountLabel = document.getElementById('image-output-rgb-char-count');
+	const imageOutputPNGCharCountLabel = document.getElementById('image-output-png-char-count');
+	const imageOutputRGBVector = document.getElementById('image-output-rgb-vector');
+	const imageOutputPNGVector = document.getElementById('image-output-png-vector');
 
 	const imageOutputCanvas = document.getElementById('image-output-canvas');
 	const imageOutputContext = imageOutputCanvas.getContext('2d');
@@ -69,25 +84,37 @@ function initializeImageReader() {
 
 	const textAreaProperties = {
 		autocomplete: "off",
-		// autocorrect: "off",
+		autocorrect: "off",
 		autocapitalize: "off",
 		spellcheck: "off",
 	};
 	for (const [key, value] of Object.entries(textAreaProperties)) {
-		imageOutputArray[key] = value;
-		imageOutputVector[key] = value;
+		imageOutputRGBVector[key] = value;
+		imageOutputPNGVector[key] = value;
 	}
 
 	// Image functions
 
+	async function readOriginalImage(file) {
+		const { resultPNGString } = await imageReader.processOriginalImageFile(file);
+		originalImageOutputPNGCharCountLabel.textContent = `${resultPNGString.length}` || "N/A";
+		if (resultPNGString.length < maximumDisplayCharCount) {
+			originalImageOutputPNGVector.value = resultPNGString;
+		} else {
+			originalImageOutputPNGVector.value = "";
+		}
+	}
+
 	async function readImage(file) {
+		await readOriginalImage(file);
+
 		// Process image
 		const config = {
 			resolutionWidth: resolutionWidth.value,
 			resolutionHeight: resolutionHeight.value,
 			rgbRound: roundColor.value,
 		};
-		const { img, result, frameRGB } = await imageReader.processImageFile(file, config);
+		const { img, resultRGBString, resultPNGString, frameRGB, newImageData, newBlob } = await imageReader.processResizeImageFile(file, config);
 
 		// Get dimensions
 		const frameWidth = frameRGB[0].length;
@@ -96,22 +123,26 @@ function initializeImageReader() {
 		// Show output
 		imageSizeLabel.textContent = `${img.width} × ${img.height}` || "N/A";
 		imageOutputSizeLabel.textContent = `${frameWidth} × ${frameHeight}` || "N/A";
-		imageOutputCharCountLabel.textContent = `${result.length}` || "N/A";
+		imageOutputRGBCharCountLabel.textContent = `${resultRGBString.length}` || "N/A";
+		imageOutputPNGCharCountLabel.textContent = `${resultPNGString.length}` || "N/A";
 
 		// Show text
-		if (result.length < maximumDisplayCharCount) {
-			imageOutputArray.value = result.replaceAll("{", "[").replaceAll("}", "]");
-			imageOutputVector.value = result;
+		if (resultRGBString.length < maximumDisplayCharCount) {
+			imageOutputRGBVector.value = resultRGBString;
 		} else {
-			imageOutputArray.value = "";
-			imageOutputVector.value = "";
+			imageOutputRGBVector.value = "";
+		}
+		if (resultPNGString.length < maximumDisplayCharCount) {
+			imageOutputPNGVector.value = resultPNGString;
+		} else {
+			imageOutputPNGVector.value = "";
 		}
 
 		// Store output image
-		storedImageOutputCanvas.width = img.width;
-		storedImageOutputCanvas.height = img.height;
-		storedImageOutputContext.clearRect(0, 0, storedImageOutputCanvas.width, storedImageOutputCanvas.height);
-		storedImageOutputContext.drawImage(img, 0, 0, frameWidth, frameHeight);
+		storedImageOutputCanvas.width = newImageData.width;
+		storedImageOutputCanvas.height = newImageData.height;
+		storedImageOutputContext.clearRect(0, 0, newImageData.width, newImageData.height);
+		storedImageOutputContext.putImageData(newImageData, 0, 0);
 
 		// Draw output (scaled) image
 		const canvasWidth = imageOutputCanvas.width;
@@ -120,24 +151,12 @@ function initializeImageReader() {
 			canvasWidth / Math.max(canvasWidth, frameWidth),
 			canvasHeight / Math.max(canvasHeight, frameHeight),
 		);
-		const scaledFrameWidth = Math.floor(frameWidth * scaleFactor);
-		const scaledFrameHeight = Math.floor(frameHeight * scaleFactor);
 		imageOutputContext.clearRect(0, 0, canvasWidth, canvasHeight);
-		if (config.rgbRound == 1) {
-			imageOutputContext.drawImage(img, 0, 0, frameWidth * scaleFactor, frameHeight * scaleFactor);
-		} else {
-			imageReader.setConfiguration({
-				resolutionWidth: scaledFrameWidth, resolutionHeight: scaledFrameHeight, rgbRound: config.rgbRound
-			});
-			const { frameRGB: newFrameRGB } = await imageReader.getImageArray(null, img);
-			const dataArray = new Uint8ClampedArray(newFrameRGB.flat(2));
-			const imageData = new ImageData(dataArray, scaledFrameWidth, scaledFrameHeight);
-			imageOutputContext.putImageData(imageData, 0, 0);
-		}
+		imageOutputContext.drawImage(storedImageOutputCanvas, 0, 0, frameWidth * scaleFactor, frameHeight * scaleFactor);
 
-		// Store output array / vector for download
-		storedImageOutput.outputArray = result.replaceAll("{", "[").replaceAll("}", "]");
-		storedImageOutput.outputVector = result;
+		// Store output vector for download
+		storedImageOutput.outputRGBVector = resultRGBString;
+		storedImageOutput.outputPNGVector = resultPNGString;
 		console.log("Processed");
 	}
 
@@ -147,14 +166,19 @@ function initializeImageReader() {
 			const file = imageInput.files[0];
 			if (file instanceof Blob) {
 				readImage(file);
-			} else {
+			} else if (false) {
+				originalImageOutputPNGCharCountLabel = "N/A";
+				originalImageOutputPNGVector = "";
+				storedImageOutput.originalPNGVector = "";
+
 				imageSizeLabel.textContent = "N/A";
 				imageOutputSizeLabel.textContent = "N/A";
-				imageOutputCharCountLabel.textContent = "N/A";
-				imageOutputArray.value = "";
-				imageOutputVector.value = "";
-				storedImageOutput.outputArray = "";
-				storedImageOutput.outputVector = "";
+				imageOutputRGBCharCountLabel.textContent = "N/A";
+				imageOutputPNGCharCountLabel.textContent = "N/A";
+				imageOutputRGBVector.value = "";
+				imageOutputPNGVector.value = "";
+				storedImageOutput.outputRGBVector = "";
+				storedImageOutput.outputPNGVector = "";
 			}
 			imageReadButton.style.setProperty("background-color", "");
 		} catch (e) {
@@ -164,7 +188,9 @@ function initializeImageReader() {
 	}
 
 	async function onConfigChanged() {
-		imageReadButton.style.setProperty("background-color", "DarkSeaGreen");
+		if (imageInput.files[0] instanceof Blob) {
+			imageReadButton.style.setProperty("background-color", "DarkSeaGreen");
+		}
 	}
 
 	// Events
@@ -177,23 +203,29 @@ function initializeImageReader() {
 }
 
 function initializeImageArrayDownload() {
+	const originalDownloadImagePNGVector = document.getElementById('original-download-png-vector');
 	const downloadScaledImage = document.getElementById('download-scaled-image');
-	const downloadImageArray = document.getElementById('download-image-array');
-	const downloadImageVector = document.getElementById('download-image-vector');
+	const downloadImageRGBVector = document.getElementById('download-rgb-vector');
+	const downloadImagePNGVector = document.getElementById('download-png-vector');
 
+	originalDownloadImagePNGVector.addEventListener("click", (ev) => {
+		if (storedImageOutput.originalPNGVector !== "") {
+			downloadTextFile(storedImageOutput.originalPNGVector, "original-image-png-vector");
+		}
+	});
 	downloadScaledImage.addEventListener("click", (ev) => {
-		if (storedImageOutput.outputArray !== "") { // If stored array is empty, then image is empty
+		if (storedImageOutput.outputRGBVector !== "") { // If stored array is empty, then image is empty
 			downloadCanvasImage(storedImageOutputCanvas, "scaled-image");
 		}
 	});
-	downloadImageArray.addEventListener("click", (ev) => {
-		if (storedImageOutput.outputArray !== "") {
-			downloadTextFile(storedImageOutput.outputArray, "image-array");
+	downloadImageRGBVector.addEventListener("click", (ev) => {
+		if (storedImageOutput.outputRGBVector !== "") {
+			downloadTextFile(storedImageOutput.outputRGBVector, "image-rgb-vector");
 		}
 	});
-	downloadImageVector.addEventListener("click", (ev) => {
-		if (storedImageOutput.outputVector !== "") {
-			downloadTextFile(storedImageOutput.outputVector, "image-vector");
+	downloadImagePNGVector.addEventListener("click", (ev) => {
+		if (storedImageOutput.outputPNGVector !== "") {
+			downloadTextFile(storedImageOutput.outputPNGVector, "image-png-vector");
 		}
 	});
 }
