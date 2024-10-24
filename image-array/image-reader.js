@@ -103,17 +103,21 @@ function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previou
 	// console.log(imageData.data);
 
 	// Initialize result
-	let resultString = "";
+	let resultString2D = "";
+	let resultString3D = "";
 	const frameRGB = [];
 
 	// Loop through every pixel
-	resultString += "{";
-	resultString += "\n";
+	resultString2D += "{";
+	resultString2D += "\n";
+	resultString3D += "{";
+	resultString3D += "\n";
 	for (let resoI = 0; resoI < height; resoI++) {
+		resultString3D += "{";
+
 		// Row RGBs
 		let rowResult = "";
 		const rowRGB = [];
-		// rowResult += "{";
 		for (let resoJ = 0; resoJ < width; resoJ++) {
 			// Get pixel's RGB info
 			let { R, G, B, rgbNumber } = getPixelRGBValues(pixels, resoJ, resoI, width, rgbRound);
@@ -136,8 +140,10 @@ function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previou
 
 			// New line if row is too long
 			if (rowResult.length > maxLineLength) {
-				resultString += rowResult;
-				resultString += "\n";
+				resultString2D += rowResult;
+				resultString2D += "\n";
+				resultString3D += rowResult;
+				resultString3D += "\n";
 				rowResult = "";
 			}
 		}
@@ -145,16 +151,21 @@ function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previou
 		// New line for each row
 		rowResult += "\n";
 
+		// Update rgb string
+		resultString2D += rowResult;
+		resultString3D += rowResult;
+		resultString3D += "},";
+
 		// Update frame
-		resultString += rowResult;
 		frameRGB.push(rowRGB);
 	}
 
 	// Trailing character for each frame
-	resultString += "}";
+	resultString2D += "}";
+	resultString3D += "}";
 
 	// Return
-	return { resultString, frameRGB };
+	return { resultString2D, resultString3D, frameRGB };
 }
 
 /**
@@ -205,9 +216,11 @@ function encodeCanvasToPNG(canvas) {
 export async function getBlobBufferString(blob) {
 	// Convert blob to array buffer
 	const arrayBuffer = await blob.arrayBuffer();
+	const uint8Array = new Uint8Array(arrayBuffer);
+
+	// Maybe compress data here?
 
 	// Turn array buffer into array string
-	const uint8Array = new Uint8Array(arrayBuffer);
 	let resultString = "";
 	resultString += "{";
 	let rowString = "";
@@ -290,8 +303,9 @@ export class ImageReader {
 		const resizedImageData = getResizedImageData(img, this.canvas, this.resolutionWidth, this.resolutionHeight);
 
 		// Add frame result for RGB pixels
-		const { resultString: frameResultRGBString, frameRGB } = getContextFrameRGB(resizedImageData, this.rgbRound);
+		const { resultString2D: frameResultRGBString, resultString3D, frameRGB } = getContextFrameRGB(resizedImageData, this.rgbRound);
 		resultRGBString += frameResultRGBString;
+		console.log(`{${resultString3D}}`);
 
 		// Add frame result for png format
 		const { resultString: frameResultPNGString, newImageData, newBlob } = await getFrameRGBBuffer(frameRGB, this.canvas2, resizedImageData.width, resizedImageData.height);
