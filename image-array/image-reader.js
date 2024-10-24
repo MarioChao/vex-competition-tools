@@ -348,11 +348,11 @@ export class ImageReader {
 	 * @param {File} imageFile 
 	 */
 	async processOriginalImageFile(imageFile) {
-		let resultPNGString = "";
-		resultPNGString += "{";
-		const frameResultPNGString = await getBlobBufferString(imageFile);
-		resultPNGString += frameResultPNGString;
-		resultPNGString += "}";
-		return { resultPNGString };
+		let resultImageString = "";
+		resultImageString += "{";
+		const frameResultImageString = await getBlobBufferString(imageFile);
+		resultImageString += frameResultImageString;
+		resultImageString += "}";
+		return { resultImageString };
 	}
 };
