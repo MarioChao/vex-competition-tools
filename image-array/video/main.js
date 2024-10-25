@@ -240,7 +240,7 @@ function initializeVideoArrayDownload() {
 				const imageData = storedVideoOutput.imageDatas[i];
 				handlePutImageData(downloadVideoOutputCanvas, imageData);
 				files.push({
-					url: storedVideoOutputCanvas.toDataURL(),
+					url: downloadVideoOutputCanvas.toDataURL(),
 					name: `scaled-video-image-${i}.png`,
 				});
 			}

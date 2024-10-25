@@ -304,9 +304,9 @@ export class ImageReader {
 	 * @param {{resolutionWidth, resolutionHeight, rgbRound}} config 
 	 */
 	setConfiguration(config) {
-		this.resolutionWidth = config.resolutionWidth;
-		this.resolutionHeight = config.resolutionHeight;
-		this.rgbRound = config.rgbRound;
+		this.resolutionWidth = parseFloat(config.resolutionWidth);
+		this.resolutionHeight = parseFloat(config.resolutionHeight);
+		this.rgbRound = parseFloat(config.rgbRound);
 	}
 
 	/**
@@ -314,10 +314,10 @@ export class ImageReader {
 	 * @param {{startFrame, frameCount, frameStep}} videoConfig 
 	 */
 	setVideoConfiguration(videoConfig) {
-		this.startFrame = videoConfig.startFrame;
-		this.frameCount = videoConfig.frameCount;
-		this.frameStep = videoConfig.frameStep;
-		this.framesPerSecond = videoConfig.framesPerSecond;
+		this.startFrame = parseFloat(videoConfig.startFrame);
+		this.frameCount = parseFloat(videoConfig.frameCount);
+		this.frameStep = parseFloat(videoConfig.frameStep);
+		this.framesPerSecond = parseFloat(videoConfig.framesPerSecond);
 	}
 
 	/**
@@ -444,6 +444,7 @@ export class ImageReader {
 		// Go through frames
 		for (let frameId = 0; frameId < this.frameCount; frameId++) {
 			const time = (this.startFrame + frameId * this.frameStep) / this.framesPerSecond;
+			console.log(time);
 
 			// Get frame result
 			const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureVideoFrame(video, time);
