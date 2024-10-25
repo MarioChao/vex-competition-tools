@@ -451,8 +451,8 @@ export class ImageReader {
 			const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureVideoFrame(video, time, previousFrame);
 
 			// Add frame result
-			resultRGBString += `${frameResultRGBString3D}\n`;
-			resultPNGString += `${frameResultPNGString}\n`;
+			resultRGBString += `${frameResultRGBString3D},\n`;
+			resultPNGString += `${frameResultPNGString},\n`;
 			newImageDatas.push(newImageData);
 			newBlobs.push(newBlob);
 			if (!frameRGB_0) {
