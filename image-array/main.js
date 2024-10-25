@@ -62,6 +62,7 @@ function downloadTextFile(contentString, fileName) {
 function initializeImageReader() {
 	const imageInput = document.getElementById('image-input');
 	const imageReadButton = document.getElementById('image-read-button');
+	const imageReadLoading = document.getElementById('image-read-loading');
 	const imageSizeLabel = document.getElementById('image-size-label');
 
 	const resolutionWidth = document.getElementById('image-resolution-width');
@@ -167,7 +168,9 @@ function initializeImageReader() {
 			// Check for valid file
 			const file = imageInput.files[0];
 			if (file instanceof Blob) {
-				readImage(file);
+				imageReadLoading.removeAttribute("hidden");
+				await readImage(file);
+				imageReadLoading.setAttribute("hidden", true);
 			}
 			imageReadButton.style.setProperty("background-color", "");
 		} catch (e) {

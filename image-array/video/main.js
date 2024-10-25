@@ -93,6 +93,7 @@ function handlePutImageData(canvas, imageData) {
 function initializeVideoReader() {
 	const videoInput = document.getElementById('video-input');
 	const videoReadButton = document.getElementById('video-read-button');
+	const videoReadLoading = document.getElementById('video-read-loading');
 	const videoSizeLabel = document.getElementById('video-size-label');
 
 	const resolutionWidth = document.getElementById('video-resolution-width');
@@ -199,7 +200,9 @@ function initializeVideoReader() {
 			// Check for valid file
 			const file = videoInput.files[0];
 			if (file instanceof Blob) {
-				readVideo(file);
+				videoReadLoading.removeAttribute("hidden");
+				await readVideo(file);
+				videoReadLoading.setAttribute("hidden", true);
 			}
 			videoReadButton.style.setProperty("background-color", "");
 		} catch (e) {
