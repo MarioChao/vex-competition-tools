@@ -11,6 +11,13 @@ const defaultConfiguration = {
 	rgbRound: 1,
 };
 
+const defaultVideoConfiguration = {
+	startFrame: 0,
+	frameCount: 30,
+	frameStep: 5,
+	framesPerSecond: 30,
+};
+
 const maxLineLength = 100;
 
 // Helper functions
@@ -39,13 +46,13 @@ function readAsArrayBuffer(imageFile) {
 
 /**
  * Resize image and return the image data
- * @param {HTMLImageElement} img 
+ * @param {CanvasImageSource} source 
  * @param {HTMLCanvasElement} canvas 
  * @param {number} targetWidth 
  * @param {number} targetHeight 
  * @returns {ImageData} Image data
  */
-function getResizedImageData(img, canvas, targetWidth, targetHeight) {
+function getResizedImageSourceData(source, canvas, targetWidth, targetHeight) {
 	const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
 	// Resize canvas to target resolution
@@ -54,7 +61,7 @@ function getResizedImageData(img, canvas, targetWidth, targetHeight) {
 
 	// Draw resized image
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+	ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
 
 	// Return image data
 	return ctx.getImageData(0, 0, targetWidth, targetHeight);
@@ -92,7 +99,7 @@ function getPixelRGBValues(dataArray, x, y, width, rgbRound) {
  * @param {ImageData} imageData 
  * @param {number} rgbRound 
  * @param {boolean} temporalEncode 
- * @param {[[[number]]]} previousFrame 
+ * @param {number[][][]} previousFrame 
  * @returns 
  */
 function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previousFrame = null) {
@@ -170,7 +177,7 @@ function getContextFrameRGB(imageData, rgbRound, temporalEncode = false, previou
 
 /**
  * 
- * @param {[[[number]]]} frameRGB 
+ * @param {number[][][]} frameRGB 
  * @param {HTMLCanvasElement} canvas 
  * @param {number} width 
  * @param {number} height 
@@ -243,7 +250,7 @@ export async function getBlobBufferString(blob) {
 
 /**
  * 
- * @param {[[[number]]]} frameRGB 
+ * @param {number[][][]} frameRGB 
  * @param {HTMLCanvasElement} canvas 
  * @param {number} width 
  * @param {number} height 
@@ -262,6 +269,19 @@ async function getFrameRGBBuffer(frameRGB, canvas, width, height) {
 	return { resultString, newImageData, newBlob };
 }
 
+/**
+ * Get the buffer string of a file.
+ * @param {File} file 
+ */
+export async function getProcessedBlobBufferString(file) {
+	let resultString = "";
+	resultString += "{";
+	const frameResultString = await getBlobBufferString(file);
+	resultString += frameResultString;
+	resultString += "}";
+	return { resultString };
+}
+
 // ImageReader Class
 export class ImageReader {
 	constructor() {
@@ -271,8 +291,12 @@ export class ImageReader {
 		this.canvas2 = document.createElement('canvas');
 		this.canvas2_ctx = this.canvas2.getContext('2d', { willReadFrequently: true });
 
+		this.video = document.createElement("video");
+		this.storedVideoFile = null;
+
 		this.temporalEncode = true;
 		this.setConfiguration(defaultConfiguration);
+		this.setVideoConfiguration(defaultVideoConfiguration);
 	}
 
 	/**
@@ -283,6 +307,40 @@ export class ImageReader {
 		this.resolutionWidth = config.resolutionWidth;
 		this.resolutionHeight = config.resolutionHeight;
 		this.rgbRound = config.rgbRound;
+	}
+
+	/**
+	 * 
+	 * @param {{startFrame, frameCount, frameStep}} videoConfig 
+	 */
+	setVideoConfiguration(videoConfig) {
+		this.startFrame = videoConfig.startFrame;
+		this.frameCount = videoConfig.frameCount;
+		this.frameStep = videoConfig.frameStep;
+		this.framesPerSecond = videoConfig.framesPerSecond;
+	}
+
+	/**
+	 * 
+	 * @param {CanvasImageSource} source
+	 * @param {boolean} temporalEncode 
+	 * @param {number[][][]} previousFrame 
+	 * @returns 
+	 */
+	async captureImageSourceArray(source, temporalEncode = false, previousFrame = null) {
+		// Get frame's image data
+		const resizedImageData = getResizedImageSourceData(source, this.canvas, this.resolutionWidth, this.resolutionHeight);
+
+		// Add frame result for RGB pixels
+		const { resultString2D, resultString3D, frameRGB } = getContextFrameRGB(resizedImageData, this.rgbRound, temporalEncode, previousFrame);
+		const frameResultRGBString2D = resultString2D;
+		const frameResultRGBString3D = resultString3D;
+
+		// Add frame result for png format
+		const { resultString: frameResultPNGString, newImageData, newBlob } = await getFrameRGBBuffer(frameRGB, this.canvas2, resizedImageData.width, resizedImageData.height);
+
+		// Return result strings and the RGB frame data
+		return { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob };
 	}
 
 	// Retrieve the resized image converted into vector and memory buffer
@@ -296,34 +354,35 @@ export class ImageReader {
 		}
 
 		// Initialize result strings
-		let resultRGBString = "{";
+		let resultRGBString2D = "{";
+		let resultRGBString3D = "{";
 		let resultPNGString = "{";
 
-		// Get frame's image data
-		const resizedImageData = getResizedImageData(img, this.canvas, this.resolutionWidth, this.resolutionHeight);
+		// Get frame result
+		const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureImageSourceArray(img);
 
-		// Add frame result for RGB pixels
-		const { resultString2D: frameResultRGBString, resultString3D, frameRGB } = getContextFrameRGB(resizedImageData, this.rgbRound);
-		resultRGBString += frameResultRGBString;
-		console.log(`{${resultString3D}}`);
-
-		// Add frame result for png format
-		const { resultString: frameResultPNGString, newImageData, newBlob } = await getFrameRGBBuffer(frameRGB, this.canvas2, resizedImageData.width, resizedImageData.height);
+		// Add frame result
+		resultRGBString2D += frameResultRGBString2D;
+		resultRGBString3D += frameResultRGBString3D;
 		resultPNGString += frameResultPNGString;
 
 		// Enclosing bracket
-		resultRGBString += "}";
+		resultRGBString2D += "}";
+		resultRGBString3D += "}";
 		resultPNGString += "}";
 
 		// Return result strings and the RGB frame data
-		return { img, resultRGBString, resultPNGString, frameRGB, newImageData, newBlob };
+		return { img, resultRGBString2D, resultRGBString3D, resultPNGString, frameRGB, newImageData, newBlob };
 	}
 
 	/**
 	 * Main function to resize & process the image
 	 * @param {File} imageFile
 	 * @param {{resolutionWidth, resolutionHeight, rgbRound}} config
-	 * @returns {Promise<{img: HTMLImageElement, resultRGBString: string, resultPNGString: string, frameRGB: [[[number]]], newImageData: ImageData, newBlob: Blob}>}
+	 * @returns {Promise<{
+	 * img: HTMLImageElement, resultRGBString2D: string, resultRGBString3D: string,
+	 * resultPNGString: string, frameRGB: number[][][], newImageData: ImageData, newBlob: Blob
+	 * }>}
 	 */
 	async processResizeImageFile(imageFile, config) {
 		// Set config
@@ -344,15 +403,104 @@ export class ImageReader {
 	}
 
 	/**
-	 * Main function to process the original image file
-	 * @param {File} imageFile 
+	 * 
+	 * @param {HTMLVideoElement} video 
+	 * @param {number} time 
+	 * @param {number[][][]} previousFrame 
+	 * @returns {Promise<{
+	 * frameResultRGBString2D: string, frameResultRGBString3D: string, frameResultPNGString: string,
+	 * frameRGB: number[][][], newImageData: ImageData, newBlob: Blob
+	 * }>}
 	 */
-	async processOriginalImageFile(imageFile) {
-		let resultImageString = "";
-		resultImageString += "{";
-		const frameResultImageString = await getBlobBufferString(imageFile);
-		resultImageString += frameResultImageString;
-		resultImageString += "}";
-		return { resultImageString };
+	async captureVideoFrame(video, time, previousFrame = null) {
+		return new Promise((resolve) => {
+			// Set video time position
+			video.currentTime = time;
+
+			// On video seeked
+			video.addEventListener("seeked", async (ev) => {
+				if (previousFrame) {
+					resolve(await this.captureImageSourceArray(video, true, previousFrame));
+				} else {
+					resolve(await this.captureImageSourceArray(video));
+				}
+			}, { once: true });
+		});
+	}
+
+	/**
+	 * 
+	 * @param {HTMLVideoElement} video 
+	 * @returns 
+	 */
+	async getResizedVideoArray(video) {
+		// Initialize result strings
+		let resultRGBString = "{";
+		let resultPNGString = "{";
+		const newImageDatas = [];
+		const newBlobs = [];
+		let frameRGB_0 = null;
+
+		// Go through frames
+		for (let frameId = 0; frameId < this.frameCount; frameId++) {
+			const time = (this.startFrame + frameId * this.frameStep) / this.framesPerSecond;
+
+			// Get frame result
+			const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureVideoFrame(video, time);
+
+			// Add frame result
+			resultRGBString += `${frameResultRGBString3D}\n`;
+			resultPNGString += `${frameResultPNGString}\n`;
+			newImageDatas.push(newImageData);
+			newBlobs.push(newBlob);
+			if (!frameRGB_0) {
+				frameRGB_0 = frameRGB;
+			}
+		}
+
+		// Enclosing bracket
+		resultRGBString += "}";
+		resultPNGString += "}";
+
+		// Return result strings and the RGB frame data
+		return { video, resultRGBString, resultPNGString, frameRGB: frameRGB_0, newImageDatas, newBlobs };
+	}
+
+	/**
+	 * 
+	 * @param {File} videoFile 
+	 * @param {{resolutionWidth, resolutionHeight, rgbRound}} config 
+	 * @param {{startFrame, frameCount, frameStep, framesPerSecond}} videoConfig 
+	 * @returns {Promise<{
+	 * video: HTMLVideoElement, resultRGBString: string, resultPNGString: string,
+	 * frameRGB: number[][][], newImageDatas: ImageData[], newBlobs: Blob[],
+	 * }>}
+	 */
+	async processResizeVideoFile(videoFile, config, videoConfig) {
+		// Set config
+		this.setConfiguration(config);
+		this.setVideoConfiguration(videoConfig);
+
+		// Revoke old video
+		if (this.storedVideoFile) {
+			URL.revokeObjectURL(this.storedVideoFile);
+		}
+
+		// Load video
+		const video = this.video;
+		video.src = URL.createObjectURL(videoFile);
+		video.muted = true;
+
+		// Store video
+		this.storedVideoFile = videoFile;
+
+		// On video loaded
+		return new Promise((resolve) => {
+			video.addEventListener("loadeddata", async (ev) => {
+				// Process video
+				resolve(await this.getResizedVideoArray(video));
+			}, { once: true });
+		})
+
 	}
 };

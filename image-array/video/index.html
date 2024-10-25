@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Image Array</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+		<script type="module" src="./main.js"></script>
+		<link rel="stylesheet" href="https://mariochao.github.io/src/style-no-hover.css">
+		<link rel="stylesheet" href="https://mariochao.github.io/dream-game/src/assets/styles/navigation-bar.css">
+	</head>
+	<body class="navbar-body" style="background-color: #FDD2FD;">
+		<!-- Navigation bar -->
+		<div class="navbar" style="text-align: center; background-color: #FDAAFD;">
+			<h1>Image Array</h1>
+		</div>
+		<div>
+			<h2 style="text-align: center;">Video Converter</h2>
+			<div class="flex-container">
+				<div>
+					<!-- Video reading -->
+					<input id="video-input" type="file" accept="video/*">
+					<br><br>
+					<input id="video-read-button" type="button" value="Update video">
+					<!-- Video info -->
+					<p>
+						Size:
+						<span id="video-size-label"></span>
+					</p>
+					<!-- Image resolution config -->
+					<hr>
+					<p style="text-align: center;">Resize resolution config</p>
+					<label for="video-resolution-width">Width:</label>
+					<br>
+					<input id="video-resolution-width" type="number" value="480">
+					<br>
+					<label for="video-resolution-height">Height:</label>
+					<br>
+					<input id="video-resolution-height" type="number" value="240">
+					<br>
+					<label for="video-color-round">Round to nearest color:</label>
+					<br>
+					<input id="video-color-round" type="number" value="1">
+					<!-- Video config -->
+					<hr>
+					<p style="text-align: center;">Video config</p>
+					<label for="video-start-frame">Start frame:</label>
+					<br>
+					<input id="video-start-frame" type="number" value="0">
+					<br>
+					<label for="video-frame-count">Frame count:</label>
+					<br>
+					<input id="video-frame-count" type="number" value="15">
+					<br>
+					<label for="video-frame-step">Frame step:</label>
+					<br>
+					<input id="video-frame-step" type="number" value="20">
+					<br>
+					<label for="video-frames-per-second">Frames per second:</label>
+					<br>
+					<input id="video-frames-per-second" type="number" value="30">
+				</div>
+				<div>
+					<!-- Video output -->
+					<p>
+						Output resolution:
+						<span id="video-output-size"></span>
+					</p>
+					<input id="download-scaled-video" type="button" value="Download Video Images">
+					<!-- Raw RGB pixels -->
+					<hr>
+					<p style="text-align: center;">Raw RGB pixels</p>
+					<p>
+						Output character count:
+						<span id="video-output-rgb-char-count"></span>
+					</p>
+					<!-- Result output RGB vector -->
+					<label for="video-output-rgb-vector">Output vector</label>
+					<br>
+					<textarea id="video-output-rgb-vector" rows="3" cols="40" readonly placeholder="Video vector will be shown here (if small enough)." style="resize: none;"></textarea>
+					<br>
+					<input id="video-download-rgb-vector" type="button" value="Download Vector">
+					<!-- PNG format -->
+					<hr>
+					<p style="text-align: center;">PNG format</p>
+					<p>
+						Output character count:
+						<span id="video-output-png-char-count"></span>
+					</p>
+					<!-- Result output PNG vector -->
+					<label for="video-output-png-vector">Output vector</label>
+					<br>
+					<textarea id="video-output-png-vector" rows="3" cols="40" readonly placeholder="Video vector will be shown here (if small enough)." style="resize: none;"></textarea>
+					<br>
+					<input id="video-download-png-vector" type="button" value="Download Vector">
+				</div>
+				<div>
+					<canvas id="video-output-canvas" width="300" height="300"></canvas>
+					<br>
+					<label for="video-output-frame-id">
+						Frame:
+						<span id="video-output-frame-id-label"></span>
+					</label>
+					<br>
+					<input id="video-output-frame-id" type="range" value="0">
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

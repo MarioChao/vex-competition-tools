@@ -26,7 +26,7 @@
 						Size:
 						<span id="image-size-label"></span>
 					</p>
-					<!-- Resolution config -->
+					<!-- Image resolution config -->
 					<hr>
 					<p style="text-align: center;">Resize resolution config</p>
 					<label for="image-resolution-width">Width:</label>
@@ -36,15 +36,13 @@
 					<label for="image-resolution-height">Height:</label>
 					<br>
 					<input id="image-resolution-height" type="number" value="240">
-					<!-- Color config -->
-					<hr>
-					<p style="text-align: center;">Color config</p>
+					<br>
 					<label for="image-color-round">Round to nearest:</label>
 					<br>
 					<input id="image-color-round" type="number" value="1">
 				</div>
 				<div>
-					<!-- Image output -->
+					<!-- Original image output -->
 					<p style="text-align: center;">Original Image Output</p>
 					<!-- Original format -->
 					<hr>
@@ -58,7 +56,7 @@
 					<br>
 					<textarea id="original-image-output-vector" rows="3" cols="40" readonly placeholder="Image vector will be shown here (if small enough)." style="resize: none;"></textarea>
 					<br>
-					<input id="original-download-vector" type="button" value="Download Vector">
+					<input id="original-image-download-vector" type="button" value="Download Vector">
 				</div>
 				<div>
 					<!-- Image output -->
@@ -79,7 +77,7 @@
 					<br>
 					<textarea id="image-output-rgb-vector" rows="3" cols="40" readonly placeholder="Image vector will be shown here (if small enough)." style="resize: none;"></textarea>
 					<br>
-					<input id="download-rgb-vector" type="button" value="Download Vector">
+					<input id="image-download-rgb-vector" type="button" value="Download Vector">
 					<!-- PNG format -->
 					<hr>
 					<p style="text-align: center;">PNG format</p>
@@ -92,7 +90,7 @@
 					<br>
 					<textarea id="image-output-png-vector" rows="3" cols="40" readonly placeholder="Image vector will be shown here (if small enough)." style="resize: none;"></textarea>
 					<br>
-					<input id="download-png-vector" type="button" value="Download Vector">
+					<input id="image-download-png-vector" type="button" value="Download Vector">
 				</div>
 				<div>
 					<canvas id="image-output-canvas" width="300" height="300"></canvas>

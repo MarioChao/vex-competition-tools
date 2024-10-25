@@ -2,7 +2,7 @@
 
 // Import
 
-import { getBlobBufferString, ImageReader } from "./image-reader.js";
+import { getProcessedBlobBufferString, ImageReader } from "./image-reader.js";
 
 // Variables
 
@@ -96,14 +96,14 @@ function initializeImageReader() {
 	// Image functions
 
 	async function readOriginalImage(file) {
-		const { resultImageString } = await imageReader.processOriginalImageFile(file);
-		originalImageOutputCharCountLabel.textContent = `${resultImageString.length}` || "N/A";
-		if (resultImageString.length < maximumDisplayCharCount) {
-			originalImageOutputVector.value = resultImageString;
+		const { resultString } = await getProcessedBlobBufferString(file);
+		originalImageOutputCharCountLabel.textContent = `${resultString.length}` || "N/A";
+		if (resultString.length < maximumDisplayCharCount) {
+			originalImageOutputVector.value = resultString;
 		} else {
 			originalImageOutputVector.value = "";
 		}
-		storedImageOutput.originalVector = resultImageString;
+		storedImageOutput.originalVector = resultString;
 	}
 
 	async function readImage(file) {
@@ -115,14 +115,15 @@ function initializeImageReader() {
 			resolutionHeight: resolutionHeight.value,
 			rgbRound: roundColor.value,
 		};
-		const { img, resultRGBString, resultPNGString, frameRGB, newImageData, newBlob } = await imageReader.processResizeImageFile(file, config);
+		const { img, resultRGBString2D, resultRGBString3D, resultPNGString, frameRGB, newImageData, newBlob } = await imageReader.processResizeImageFile(file, config);
+		const resultRGBString = resultRGBString3D;
 
 		// Get dimensions
 		const frameWidth = frameRGB[0].length;
 		const frameHeight = frameRGB.length;
 
 		// Show output
-		imageSizeLabel.textContent = `${img.width} × ${img.height}` || "N/A";
+		imageSizeLabel.textContent = `${img.naturalWidth} × ${img.naturalHeight}` || "N/A";
 		imageOutputSizeLabel.textContent = `${frameWidth} × ${frameHeight}` || "N/A";
 		imageOutputRGBCharCountLabel.textContent = `${resultRGBString.length}` || "N/A";
 		imageOutputPNGCharCountLabel.textContent = `${resultPNGString.length}` || "N/A";
@@ -167,19 +168,6 @@ function initializeImageReader() {
 			const file = imageInput.files[0];
 			if (file instanceof Blob) {
 				readImage(file);
-			} else if (false) {
-				originalImageOutputCharCountLabel = "N/A";
-				originalImageOutputVector = "";
-				storedImageOutput.originalVector = "";
-
-				imageSizeLabel.textContent = "N/A";
-				imageOutputSizeLabel.textContent = "N/A";
-				imageOutputRGBCharCountLabel.textContent = "N/A";
-				imageOutputPNGCharCountLabel.textContent = "N/A";
-				imageOutputRGBVector.value = "";
-				imageOutputPNGVector.value = "";
-				storedImageOutput.outputRGBVector = "";
-				storedImageOutput.outputPNGVector = "";
 			}
 			imageReadButton.style.setProperty("background-color", "");
 		} catch (e) {
@@ -204,10 +192,10 @@ function initializeImageReader() {
 }
 
 function initializeImageArrayDownload() {
-	const originalDownloadImageVector = document.getElementById('original-download-vector');
+	const originalDownloadImageVector = document.getElementById('original-image-download-vector');
 	const downloadScaledImage = document.getElementById('download-scaled-image');
-	const downloadImageRGBVector = document.getElementById('download-rgb-vector');
-	const downloadImagePNGVector = document.getElementById('download-png-vector');
+	const downloadImageRGBVector = document.getElementById('image-download-rgb-vector');
+	const downloadImagePNGVector = document.getElementById('image-download-png-vector');
 
 	originalDownloadImageVector.addEventListener("click", (ev) => {
 		if (storedImageOutput.originalVector !== "") {
