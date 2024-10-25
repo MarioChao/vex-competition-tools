@@ -440,14 +440,15 @@ export class ImageReader {
 		const newImageDatas = [];
 		const newBlobs = [];
 		let frameRGB_0 = null;
+		let previousFrame = null;
 
 		// Go through frames
 		for (let frameId = 0; frameId < this.frameCount; frameId++) {
 			const time = (this.startFrame + frameId * this.frameStep) / this.framesPerSecond;
-			console.log(time);
+			// console.log(time);
 
 			// Get frame result
-			const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureVideoFrame(video, time);
+			const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureVideoFrame(video, time, previousFrame);
 
 			// Add frame result
 			resultRGBString += `${frameResultRGBString3D}\n`;
@@ -457,6 +458,9 @@ export class ImageReader {
 			if (!frameRGB_0) {
 				frameRGB_0 = frameRGB;
 			}
+
+			// Update previous frame
+			previousFrame = frameRGB;
 		}
 
 		// Enclosing bracket
