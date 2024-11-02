@@ -304,9 +304,9 @@ export class ImageReader {
 	 * @param {{resolutionWidth, resolutionHeight, rgbRound}} config 
 	 */
 	setConfiguration(config) {
-		this.resolutionWidth = parseFloat(config.resolutionWidth);
-		this.resolutionHeight = parseFloat(config.resolutionHeight);
-		this.rgbRound = parseFloat(config.rgbRound);
+		this.resolutionWidth = parseFloat(config.resolutionWidth) || defaultConfiguration.resolutionWidth;
+		this.resolutionHeight = parseFloat(config.resolutionHeight) || defaultConfiguration.resolutionHeight;
+		this.rgbRound = parseFloat(config.rgbRound) || defaultConfiguration.rgbRound;
 	}
 
 	/**
@@ -314,10 +314,10 @@ export class ImageReader {
 	 * @param {{startFrame, frameCount, frameStep}} videoConfig 
 	 */
 	setVideoConfiguration(videoConfig) {
-		this.startFrame = parseFloat(videoConfig.startFrame);
-		this.frameCount = parseFloat(videoConfig.frameCount);
-		this.frameStep = parseFloat(videoConfig.frameStep);
-		this.framesPerSecond = parseFloat(videoConfig.framesPerSecond);
+		this.startFrame = parseFloat(videoConfig.startFrame) || defaultVideoConfiguration.startFrame;
+		this.frameCount = parseFloat(videoConfig.frameCount) || defaultVideoConfiguration.frameCount;
+		this.frameStep = parseFloat(videoConfig.frameStep) || defaultVideoConfiguration.frameStep;
+		this.framesPerSecond = parseFloat(videoConfig.framesPerSecond) || defaultConfiguration.framesPerSecond;
 	}
 
 	/**

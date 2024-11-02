@@ -2,7 +2,7 @@
 
 // Import
 
-import { getProcessedBlobBufferString, ImageReader } from "../image-reader.js";
+import { getProcessedBlobBufferString, ImageReader } from "../src/image-reader.js";
 
 // Variables
 
@@ -300,4 +300,4 @@ function onDOMContentLoaded() {
 	initializeVideoFrameSlider();
 }
 
-window.addEventListener("DOMContentLoaded", onDOMContentLoaded)
+window.addEventListener("DOMContentLoaded", onDOMContentLoaded);
