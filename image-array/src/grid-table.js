@@ -27,13 +27,19 @@ function initializePairedTables() {
 		// Group child elements into rows with `columnsCount` columns
 		let tableRow = tableElement.insertRow();
 		while (pairedTableContainer.children.length > 0) {
+			// Get first child element
+			const childElement = pairedTableContainer.firstElementChild;
+
+			// Validate not br
+			if (childElement.nodeName === "BR") {
+				pairedTableContainer.removeChild(childElement);
+				continue;
+			}
+
 			// Insert a new row if there are `columnsCount` columns
 			if (tableRow.childElementCount >= columnsCount) {
 				tableRow = tableElement.insertRow();
 			}
-
-			// Get first child element
-			const childElement = pairedTableContainer.firstElementChild;
 
 			// Insert cell and append child element
 			tableRow.insertCell().appendChild(childElement);
