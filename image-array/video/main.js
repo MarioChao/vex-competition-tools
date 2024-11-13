@@ -94,6 +94,7 @@ function initializeVideoReader() {
 	const videoInput = document.getElementById('video-input');
 	const videoReadButton = document.getElementById('video-read-button');
 	const videoReadLoading = document.getElementById('video-read-loading');
+	const videoReadLoadingProgress = document.getElementById('video-read-loading-progress');
 	const videoSizeLabel = document.getElementById('video-size-label');
 
 	const resolutionWidth = document.getElementById('video-resolution-width');
@@ -128,6 +129,10 @@ function initializeVideoReader() {
 		videoOutputRGBVector[key] = value;
 		videoOutputPNGVector[key] = value;
 	}
+
+	// Set image reader progress
+
+	videoReader.loadProgressElement = videoReadLoadingProgress;
 
 	// Video functions
 

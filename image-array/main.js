@@ -63,6 +63,7 @@ function initializeImageReader() {
 	const imageInput = document.getElementById('image-input');
 	const imageReadButton = document.getElementById('image-read-button');
 	const imageReadLoading = document.getElementById('image-read-loading');
+	const imageReadLoadingProgress = document.getElementById('image-read-loading-progress');
 	const imageSizeLabel = document.getElementById('image-size-label');
 
 	const resolutionWidth = document.getElementById('image-resolution-width');
@@ -93,6 +94,10 @@ function initializeImageReader() {
 		imageOutputRGBVector[key] = value;
 		imageOutputPNGVector[key] = value;
 	}
+
+	// Set image reader progress
+
+	imageReader.loadProgressElement = imageReadLoadingProgress;
 
 	// Image functions
 

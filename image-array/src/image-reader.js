@@ -18,6 +18,11 @@ const defaultVideoConfiguration = {
 	framesPerSecond: 30,
 };
 
+const defaultLoadProgress = {
+	loadedCount: 0,
+	totalCount: 0,
+};
+
 const maxLineLength = 100;
 
 // Helper functions
@@ -297,6 +302,9 @@ export class ImageReader {
 		this.temporalEncode = true;
 		this.setConfiguration(defaultConfiguration);
 		this.setVideoConfiguration(defaultVideoConfiguration);
+
+		this.loadProgress = defaultLoadProgress;
+		this.loadProgressElement = null;
 	}
 
 	/**
@@ -318,6 +326,16 @@ export class ImageReader {
 		this.frameCount = parseFloat(videoConfig.frameCount) || defaultVideoConfiguration.frameCount;
 		this.frameStep = parseFloat(videoConfig.frameStep) || defaultVideoConfiguration.frameStep;
 		this.framesPerSecond = parseFloat(videoConfig.framesPerSecond) || defaultConfiguration.framesPerSecond;
+	}
+
+	updateLoadProgress() {
+		// Validate element
+		if (!this.loadProgressElement) {
+			return;
+		}
+
+		// Update progress
+		this.loadProgressElement.innerText = `${this.loadProgress.loadedCount}/${this.loadProgress.totalCount}`;
 	}
 
 	/**
@@ -358,6 +376,11 @@ export class ImageReader {
 		let resultRGBString3D = "{";
 		let resultPNGString = "{";
 
+		// Set load progress
+		this.loadProgress.loadedCount = 0;
+		this.loadProgress.totalCount = 1;
+		this.updateLoadProgress();
+
 		// Get frame result
 		const { frameResultRGBString2D, frameResultRGBString3D, frameResultPNGString, frameRGB, newImageData, newBlob } = await this.captureImageSourceArray(img);
 
@@ -365,6 +388,10 @@ export class ImageReader {
 		resultRGBString2D += frameResultRGBString2D;
 		resultRGBString3D += frameResultRGBString3D;
 		resultPNGString += frameResultPNGString;
+
+		// Update load progress
+		this.loadProgress.loadedCount++;
+		this.updateLoadProgress();
 
 		// Enclosing bracket
 		resultRGBString2D += "}";
@@ -442,6 +469,11 @@ export class ImageReader {
 		let frameRGB_0 = null;
 		let previousFrame = null;
 
+		// Set load progress
+		this.loadProgress.loadedCount = 0;
+		this.loadProgress.totalCount = this.frameCount;
+		this.updateLoadProgress();
+
 		// Go through frames
 		for (let frameId = 0; frameId < this.frameCount; frameId++) {
 			const time = (this.startFrame + frameId * this.frameStep) / this.framesPerSecond;
@@ -461,6 +493,10 @@ export class ImageReader {
 
 			// Update previous frame
 			previousFrame = frameRGB;
+
+			// Update load progress
+			this.loadProgress.loadedCount++;
+			this.updateLoadProgress();
 		}
 
 		// Enclosing bracket
