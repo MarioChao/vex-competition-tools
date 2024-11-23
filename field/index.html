@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>VEX Field</title>
+		<script type="module" src="./main.js"></script>
+	</head>
+	<body>
+		<svg id="field" style="border: 1px solid;" width="640" height="640">
+			<!-- Image -->
+			<image href="./src/images/high-stakes-vr-skills-field.png"/ x="10" y="10" width="620", height="620"></image>
+			<rect width="100%" height="100%" fill="#CAEACA" opacity="0.6"></rect>
+
+			<!-- Offset from margin -->
+			<g transform="matrix(1 0 0 1 20 20)">
+				<!-- Scale to coordinate system -->
+				<g transform="scale(100) matrix(1 0 0 -1 0 6)">
+					<!-- Line details -->
+					<g id="paths" fill="none" stroke="#F8C888" stroke-width="0.05"></g>
+					<g id="dotted-points" fill="#A555A5" opacity="0.5"></g>
+					<g id="control-points" fill="#EAAAEA" opacity="0.8" stroke="#A555A5" stroke-width="0.03"></g>
+				</g>
+			</g>
+		</svg>
+	</body>
+</html>
