@@ -87,7 +87,11 @@ export class SVGCubicSpline {
 		this.setPoints(points);
 
 		// Set stored svg elements
+		this.storedPathContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
 		this.storedControlContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		this.storedBezierControlContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		this.storedControlConnectionsContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		this.storedBezierControlConnectionsContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
 		this.storedDotContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
 	}
 
@@ -117,14 +121,6 @@ export class SVGCubicSpline {
 		const bezierPoints = this.bezierSplinePoints;
 		const pathString = `M ${bezierPoints[0]}, C ${bezierPoints[1]}, ${bezierPoints[2]}, ${bezierPoints[3]},`;
 		this.path.setAttribute("d", pathString);
-	}
-
-	/**
-	 * 
-	 * @returns {SVGPathElement}
-	 */
-	getPathElement() {
-		return this.path;
 	}
 
 	/**
@@ -257,16 +253,41 @@ export class SVGCubicSpline {
 		this.moveSplinePointTo(t, centerPoint);
 	}
 
+	showPath(parent_element, strokeColor = "") {
+		// Get container
+		const container = this.storedPathContainer;
+		if (container.parentElement === parent_element) {
+			parent_element.removeChild(container);
+		}
+
+		// Set config
+		container.setAttribute("stroke", strokeColor);
+
+		// Parent path
+		container.appendChild(this.path);
+
+		// Show
+		parent_element.appendChild(container);
+	}
+
+	hidePath() {
+		// Get and hide container
+		const container = this.storedPathContainer;
+		const parent_element = container.parentElement;
+		if (parent_element) {
+			parent_element.removeChild(container);
+		}
+	}
 
 	/**
 	 * 
-	 * @param {SVGElement} parent_element The parent element of the circles and lines.
-	 * @param {string} strokeColor The stroke color of the circles and lines.
-	 * @param {number} radius The radius of the circles.
+	 * @param {SVGElement} parent_element 
+	 * @param {SVGGElement} container 
+	 * @param {[x: number, y: number][]} points 
+	 * @param {string} strokeColor
 	 */
-	drawControl(parent_element, strokeColor = "", radius = 0.05) {
+	_drawConnections(parent_element, container, points, strokeColor = "") {
 		// Get container
-		const container = this.storedControlContainer;
 		if (container.parentElement === parent_element) {
 			parent_element.removeChild(container);
 		}
@@ -274,28 +295,20 @@ export class SVGCubicSpline {
 		// Clear previous dots
 		container.innerHTML = "";
 
+		// Set config
+		container.setAttribute("stroke", strokeColor);
+		// container.setAttribute("stroke-dasharray", "0.1");
+
 		// Draw connections
 		{
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-			let pathString = `M ${this.controlPoints[0]},`;
-			for (let index = 1; index < this.controlPoints.length; index++) {
-				pathString += ` L ${this.controlPoints[index]},`;
+			let pathString = `M ${points[0]},`;
+			for (let index = 1; index < points.length; index++) {
+				pathString += ` L ${points[index]},`;
 			}
 			path.setAttribute("d", pathString);
 			path.setAttribute("fill", "none");
-			path.setAttribute("stroke", strokeColor);
-			path.setAttribute("stroke-dasharray", "0.3");
 			container.append(path);
-		}
-
-		// Draw dots
-		for (const point of this.controlPoints) {
-			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-			circle.setAttribute("cx", point[0]);
-			circle.setAttribute("cy", point[1]);
-			circle.setAttribute("r", radius);
-			circle.setAttribute("stroke", strokeColor);
-			container.append(circle);
 		}
 
 		// Show
@@ -305,10 +318,80 @@ export class SVGCubicSpline {
 	/**
 	 * 
 	 * @param {SVGElement} parent_element The parent element of the circles.
+	 * @param {string} strokeColor The stroke color of the circles.
+	 * @param {SVGElement} connections_element The parent element of the connections. `null` for no connections.
+	 * @param {number} radius The radius of the circles.
+	 */
+	drawControl(parent_element, strokeColor = "", connections_element = null, radius = 0.05) {
+		// Get container
+		const container = this.storedControlContainer;
+		if (container.parentElement === parent_element) {
+			parent_element.removeChild(container);
+		}
+
+		// Clear previous dots
+		container.innerHTML = "";
+
+		// Set config
+		container.setAttribute("stroke", strokeColor);
+
+		// Draw dots
+		for (const point of this.controlPoints) {
+			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			circle.setAttribute("cx", point[0]);
+			circle.setAttribute("cy", point[1]);
+			circle.setAttribute("r", radius);
+			container.append(circle);
+		}
+
+		// Draw connections
+		if (connections_element) {
+			this._drawConnections(connections_element, this.storedControlConnectionsContainer, this.controlPoints, strokeColor);
+		}
+
+		// Show
+		parent_element.appendChild(container);
+	}
+
+	drawBezierControl(parent_element, strokeColor = "", connections_element = null, radius = 0.05) {
+		// Get container
+		const container = this.storedBezierControlContainer;
+		if (container.parentElement === parent_element) {
+			parent_element.removeChild(container);
+		}
+
+		// Clear previous dots
+		container.innerHTML = "";
+
+		// Set config
+		container.setAttribute("stroke", strokeColor);
+
+		// Draw dots
+		for (const point of this.bezierSplinePoints) {
+			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			circle.setAttribute("cx", point[0]);
+			circle.setAttribute("cy", point[1]);
+			circle.setAttribute("r", radius);
+			container.append(circle);
+		}
+
+		// Draw connections
+		if (connections_element) {
+			this._drawConnections(connections_element, this.storedBezierControlConnectionsContainer, this.bezierSplinePoints, strokeColor);
+		}
+
+		// Show
+		parent_element.appendChild(container);
+	}
+
+	/**
+	 * 
+	 * @param {SVGElement} parent_element The parent element of the circles.
+	 * * @param {string} circleColor The color of the circles.
 	 * @param {number} dt For each dt, draw a circle.
 	 * @param {number} radius The radius of the circles.
 	 */
-	drawDotted(parent_element, dt = 0.05, t_start = 0, t_end = 1, radius = 0.03) {
+	drawDottedByT(parent_element, circleColor = "", dt = 0.05, t_start = 0, t_end = 1, radius = 0.03) {
 		// Get container
 		const container = this.storedDotContainer;
 		if (container.parentElement === parent_element) {
@@ -317,6 +400,9 @@ export class SVGCubicSpline {
 
 		// Clear previous dots
 		container.innerHTML = "";
+
+		// Set config
+		container.setAttribute("fill", circleColor);
 
 		// Draw dots
 		for (let t = t_start; t < t_end; t += dt) {
@@ -334,6 +420,12 @@ export class SVGCubicSpline {
 
 	eraseControl() {
 		this.storedControlContainer.innerHTML = "";
+		this.storedControlConnectionsContainer.innerHTML = "";
+	}
+
+	eraseBezierControl() {
+		this.storedBezierControlContainer.innerHTML = "";
+		this.storedBezierControlConnectionsContainer.innerHTML = "";
 	}
 
 	eraseDotted() {
