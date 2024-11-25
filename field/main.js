@@ -1,17 +1,17 @@
 // Variables
 
-import { SplineType, SVGCubicSpline } from "./src/svg-cspline.js";
+import { SplineType, SVGCubicSplineSegment } from "./src/svg-cspline-segment.js";
 
 
 // Local functions
 
 function testBasis(paths, control_points, dotted_points, connections) {
-	const basisSpline1 = new SVGCubicSpline([[0, 0], [0, 3], [3, 0], [3, 3]], SplineType.B_Spline);
-	const basisSpline2 = new SVGCubicSpline([
+	const basisSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 3], [3, 0], [3, 3]], SplineType.B_Spline);
+	const basisSpline2 = new SVGCubicSplineSegment([
 		basisSpline1.controlPoints[1], basisSpline1.controlPoints[2], basisSpline1.controlPoints[3], [3, 6]], SplineType.B_Spline);
-	const basisSpline3 = new SVGCubicSpline([
+	const basisSpline3 = new SVGCubicSplineSegment([
 		basisSpline2.controlPoints[1], basisSpline2.controlPoints[2], basisSpline2.controlPoints[3], [6, 3]], SplineType.B_Spline);
-	const basisSpline4 = new SVGCubicSpline([
+	const basisSpline4 = new SVGCubicSplineSegment([
 		basisSpline3.controlPoints[1], basisSpline3.controlPoints[2], basisSpline3.controlPoints[3], [6, 6]], SplineType.B_Spline);
 
 	basisSpline1.showPath(paths);
@@ -47,10 +47,10 @@ function testBasis(paths, control_points, dotted_points, connections) {
 }
 
 function testAll(paths, control_points, dotted_points, connections) {
-	const bezierSpline1 = new SVGCubicSpline([[0, 0], [0, 2], [2, 0], [2, 2]]);
-	const basisSpline1 = new SVGCubicSpline([[0, 0], [0, 2], [2, 0], [2, 2]], SplineType.B_Spline);
-	const catmullRomSpline1 = new SVGCubicSpline([[0, 0], [0, 2], [2, 0], [2, 2]], SplineType.CatmullRom);
-	const hermiteSpline1 = new SVGCubicSpline([[0, 0], [0, 2], [2, 0], [2, 2]], SplineType.Hermite);
+	const bezierSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 2], [2, 0], [2, 2]]);
+	const basisSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 2], [2, 0], [2, 2]], SplineType.B_Spline);
+	const catmullRomSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 2], [2, 0], [2, 2]], SplineType.CatmullRom);
+	const hermiteSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 2], [2, 0], [2, 2]], SplineType.Hermite);
 
 	bezierSpline1.showPath(paths);
 	basisSpline1.showPath(paths);

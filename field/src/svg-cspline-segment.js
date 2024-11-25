@@ -1,4 +1,4 @@
-// SVG Cubic Spline
+// SVG Cubic Spline Segment
 
 import { Matrix } from "./matrix.js";
 
@@ -67,7 +67,7 @@ export const SplineType = Object.freeze({
 
 // SVGCubicSpline Class
 
-export class SVGCubicSpline {
+export class SVGCubicSplineSegment {
 	/**
 	 * Constructs a new cubic spline for SVG.
 	 * @param {[[x: number, y: number], [x: number, y: number], [x: number, y: number], [x: number, y: number]]} points 
