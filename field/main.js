@@ -1,50 +1,10 @@
 // Variables
 
 import { SplineType, SVGCubicSplineSegment } from "./src/svg-cspline-segment.js";
+import { SVGUniformCubicSpline } from "./src/svg-uniform-cspline.js";
 
 
 // Local functions
-
-function testBasis(paths, control_points, dotted_points, connections) {
-	const basisSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 3], [3, 0], [3, 3]], SplineType.B_Spline);
-	const basisSpline2 = new SVGCubicSplineSegment([
-		basisSpline1.controlPoints[1], basisSpline1.controlPoints[2], basisSpline1.controlPoints[3], [3, 6]], SplineType.B_Spline);
-	const basisSpline3 = new SVGCubicSplineSegment([
-		basisSpline2.controlPoints[1], basisSpline2.controlPoints[2], basisSpline2.controlPoints[3], [6, 3]], SplineType.B_Spline);
-	const basisSpline4 = new SVGCubicSplineSegment([
-		basisSpline3.controlPoints[1], basisSpline3.controlPoints[2], basisSpline3.controlPoints[3], [6, 6]], SplineType.B_Spline);
-
-	basisSpline1.showPath(paths);
-	basisSpline2.showPath(paths);
-	basisSpline3.showPath(paths);
-	basisSpline4.showPath(paths);
-
-	function spinAndDraw() {
-		// Rotate
-		const rotate_degrees = -1;
-		basisSpline2.rotateBy(rotate_degrees, 1);
-		basisSpline1.rotateBy(rotate_degrees, 0);
-		basisSpline1.moveSplinePointTo(1, basisSpline2.getAt(0));
-		basisSpline3.rotateBy(rotate_degrees, 0);
-		basisSpline3.moveSplinePointTo(0, basisSpline2.getAt(1));
-		basisSpline4.rotateBy(rotate_degrees, 0);
-		basisSpline4.moveSplinePointTo(0, basisSpline3.getAt(1));
-
-		// Draw
-		basisSpline1.drawBezierControl(control_points, "", connections);
-		basisSpline2.drawBezierControl(control_points, "hotpink", connections);
-		basisSpline3.drawBezierControl(control_points, "", connections);
-		basisSpline4.drawBezierControl(control_points, "hotpink", connections);
-
-		basisSpline1.drawDottedByT(dotted_points);
-		basisSpline2.drawDottedByT(dotted_points, "hotpink");
-		basisSpline3.drawDottedByT(dotted_points);
-		basisSpline4.drawDottedByT(dotted_points, "hotpink");
-
-		setTimeout(spinAndDraw, 10);
-	}
-	spinAndDraw();
-}
 
 function testAll(paths, control_points, dotted_points, connections) {
 	const bezierSpline1 = new SVGCubicSplineSegment([[0, 0], [0, 2], [2, 0], [2, 2]]);
@@ -76,14 +36,38 @@ function testAll(paths, control_points, dotted_points, connections) {
 	hermiteSpline1.drawDottedByT(dotted_points);
 }
 
+function testGeneral(paths, control_points, dotted_points, connections) {
+	const spline = new SVGUniformCubicSpline([
+		new SVGCubicSplineSegment([[0, 0], [0, 3], [3, 0], [3, 3]], SplineType.B_Spline),
+	]);
+	spline.extendPoint([3, 6]);
+	spline.extendPoint([6, 3]);
+	spline.extendPoint([6, 6]);
+	spline.showPath(paths, "magenta");
+
+	function spinAndDraw() {
+		// Rotate
+		const rotate_degrees = -1;
+		spline.rotateBy(rotate_degrees, 2);
+
+		// Draw
+		// spline.drawControl(control_points, "", connections)
+		// spline.drawBezierControl(control_points, "", connections);
+		// spline.drawDottedByT(dotted_points);
+
+		setTimeout(spinAndDraw, 10);
+	}
+	// spinAndDraw();
+}
+
 function initializePaths() {
 	const paths = document.getElementById("paths");
 	const control_points = document.getElementById("control-points");
 	const dotted_points = document.getElementById("dotted-points");
 	const connections = document.getElementById("control-point-connections");
 
-	testBasis(paths, control_points, dotted_points, connections);
 	// testAll(paths, control_points, dotted_points, connections);
+	testGeneral(paths, control_points, dotted_points, connections);
 }
 
 function onDOMContentLoaded() {
